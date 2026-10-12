@@ -1,0 +1,2 @@
+import { demoEnabled,origin } from '@/lib/server';
+export function GET(){const lines=demoEnabled()?['User-agent: *','Disallow: /']:['User-agent: *','Allow: /','Disallow: /api/app/','Disallow: /api/auth/','Disallow: /ru/dashboard','Disallow: /kk/dashboard','Disallow: /uz/dashboard','Disallow: /ru/register','Disallow: /kk/register','Disallow: /uz/register','User-agent: GPTBot','Disallow: /','User-agent: ClaudeBot','Disallow: /',`Sitemap: ${origin()}/sitemap.xml`];return new Response(lines.join('\n')+'\n',{headers:{'Content-Type':'text/plain; charset=utf-8'}});}

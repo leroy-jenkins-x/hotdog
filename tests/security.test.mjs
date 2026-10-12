@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import { build } from 'esbuild';
+import { mkdir } from 'node:fs/promises';
+await mkdir('.sites-runtime/tests',{recursive:true});
+for(const source of ['security','dates'])await build({entryPoints:[`lib/${source}.ts`],outfile:`.sites-runtime/tests/${source}.mjs`,bundle:true,format:'esm',platform:'node',logLevel:'error'});
+const {seal,unseal,safeReturn,validateFile}=await import('../.sites-runtime/tests/security.mjs');const {zonedDateTime}=await import('../.sites-runtime/tests/dates.mjs');
+const secret='unit-test-secret-not-for-production';const token=await seal({userId:'one'},secret);assert.deepEqual(await unseal(token,secret),{userId:'one'});assert.equal(await unseal(token.slice(0,-1)+'!',secret),null);assert.equal(await unseal(token,'wrong'),null);
+assert.equal(safeReturn('//evil.example'),'/ru/dashboard');assert.equal(safeReturn('/ru/register'),'/ru/register');assert.throws(()=>validateFile(new TextEncoder().encode('<svg/>'),'image/png','photo'));
+assert.equal(zonedDateTime('2026-10-15T15:00','Asia/Almaty'),'2026-10-15T10:00:00.000Z');assert.equal(zonedDateTime('2026-10-15T15:00','Europe/Moscow'),'2026-10-15T12:00:00.000Z');assert.throws(()=>zonedDateTime('2026-03-29T02:30','Europe/Berlin'));
+console.log('PASS: signed-session tampering, return URL validation, file signature rejection, timezone conversion and daylight-saving gap.');

@@ -1,0 +1,5 @@
+import { GitBranch,CalendarDays,HelpCircle,Leaf } from 'lucide-react';
+import { localeOf,t } from '@/lib/i18n';
+import { metadata } from '@/lib/seo';
+export async function generateMetadata({params}:{params:Promise<{locale:string}>}){const l=localeOf((await params).locale);return metadata(l,'/guides',t(l).guides,t(l).guidesText);}
+export default async function Page({params}:{params:Promise<{locale:string}>}){const l=localeOf((await params).locale),d=t(l);return <main className="container page-main" id="main"><div className="page-heading"><span className="eyebrow">{d.guides}</span><h1>{d.guidesTitle}</h1><p>{d.guidesText}</p></div><div className="guide-grid">{[{title:d.guide1,text:d.guide1Text,icon:GitBranch},{title:d.guide2,text:d.guide2Text,icon:CalendarDays},{title:d.guide3,text:d.guide3Text,icon:HelpCircle},{title:d.guide4,text:d.guide4Text,icon:Leaf}].map((g,i)=><article className="guide-card" key={i}><span className="round-icon"><g.icon size={28} strokeWidth={1.5}/></span><h2>{g.title}</h2><p>{g.text}</p></article>)}</div><div className="notice" style={{marginTop:28}}><Leaf size={18}/>{d.evidenceText}</div></main>;}

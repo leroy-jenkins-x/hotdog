@@ -1,0 +1,10 @@
+import { readFile,writeFile } from 'node:fs/promises';
+for(const name of ['D1_DATABASE_ID','R2_BUCKET_NAME','SITE_ORIGIN'])if(!process.env[name])throw new Error(`Set ${name} before preparing deployment.`);
+const config=JSON.parse(await readFile('dist/server/wrangler.json','utf8'));
+config.name='hotdog-rodnya';
+config.vars={...config.vars,SITE_ORIGIN:process.env.SITE_ORIGIN,DEMO_MODE:'false'};
+config.d1_databases=[{binding:'DB',database_name:'hotdog',database_id:process.env.D1_DATABASE_ID}];
+config.r2_buckets=[{binding:'BUCKET',bucket_name:process.env.R2_BUCKET_NAME}];
+delete config.topLevelName;
+await writeFile('dist/server/wrangler.production.json',JSON.stringify(config,null,2));
+console.log('Prepared the production config. Configure secrets and apply migrations before deployment.');

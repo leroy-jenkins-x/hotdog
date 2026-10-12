@@ -1,0 +1,18 @@
+import type { Pet } from './types';
+const createdAt = '2026-10-12T00:00:00.000Z';
+export const demoPets: Pet[] = [
+  { id: 'demo-mars', ownerId: 'demo-anna', name: 'Марс', species: 'dog', breed: 'Вельш-корги пемброк', sex: 'male', born: '2023-06-18', city: 'Москва', description: 'Очень общительный, любит длинные прогулки и всегда знает, где спрятаны вкусняшки. Спокойно знакомится с другими собаками.', parents: [{name:'Солнечный Ветер',evidence:'owner-reported',parents:[{name:'Рыжий Рассвет',evidence:'owner-reported'},{name:'Астра',evidence:'owner-reported'}]},{name:'Мила',evidence:'owner-reported'}], status:'available', isDemo:true, createdAt, updatedAt:createdAt },
+  { id: 'demo-luna', ownerId: 'demo-aida', name: 'Луна', species: 'cat', breed: 'Британская длинношёрстная', sex: 'female', born: '2024-02-14', city: 'Алматы', description: 'Нежная, любопытная и немного мечтательная. Любит наблюдать за птицами из окна и составлять компанию за книгой.', parents:[{name:'Лео',evidence:'owner-reported'},{name:'Персиковая Фея',evidence:'owner-reported'}], status:'introduction', isDemo:true, createdAt, updatedAt:createdAt },
+  { id: 'demo-iris', ownerId: 'demo-timur', name: 'Ирис', species: 'snake', breed: 'Маисовый полоз · Amelanistic', sex: 'male', born: '2023-09-02', city: 'Ташкент', description: 'Маисовый полоз (Pantherophis guttatus), рождённый в неволе. Для обсуждения пары важно отдельно уточнить происхождение и генетические сведения.', parents:[], status:'introduction', isDemo:true, createdAt, updatedAt:createdAt },
+  { id: 'demo-finn', ownerId: 'demo-alex', name: 'Финн', species:'dog', breed:'Вельш-корги пемброк', sex:'male', born:'2024-01-07', city:'Казань', description:'Обожает поездки и новые запахи. Начинаем с общения владельцев и спокойного знакомства.', parents:[], status:'introduction', isDemo:true, createdAt, updatedAt:createdAt },
+  { id:'demo-mila',ownerId:'demo-olga',name:'Мила',species:'cat',breed:'Британская длинношёрстная',sex:'female',born:'2022-07-21',city:'Москва',description:'Спокойная домашняя кошка. Сведения о родителях указаны в семейных записях владельца.',parents:[{name:'Оскар',evidence:'owner-reported'},{name:'Джулия',evidence:'owner-reported'}],status:'available',isDemo:true,createdAt,updatedAt:createdAt},
+  { id:'demo-amber',ownerId:'demo-dana',name:'Янтарь',species:'snake',breed:'Pantherophis guttatus · Amelanistic',sex:'unknown',born:'2024-08-10',city:'Астана',description:'Молодой маисовый полоз. Пол пока не подтверждён, поэтому анкета открыта только для общения владельцев.',parents:[],status:'introduction',isDemo:true,createdAt,updatedAt:createdAt},
+];
+export const demoDescriptions: Record<string, {kk:string;uz:string}> = {
+  'demo-mars':{kk:'Ақжарқын, ұзақ серуенді жақсы көреді. Басқа иттермен сабырлы танысады.',uz:'Do‘stona, uzoq sayrlarni yoqtiradi. Boshqa itlar bilan xotirjam tanishadi.'},
+  'demo-luna':{kk:'Мейірімді әрі қызығушылығы мол. Терезеден құстарды бақылағанды ұнатады.',uz:'Mehribon va qiziquvchan. Derazadan qushlarni kuzatishni yaxshi ko‘radi.'},
+  'demo-iris':{kk:'Қолда өсірілген маис жыланы. Жұпты талқылағанда шығу тегі мен генетикасын бөлек тексеру керек.',uz:'Asirlikda tug‘ilgan makkajo‘xori iloni. Juft tanlashda kelib chiqish va genetikani alohida tekshirish kerak.'},
+  'demo-finn':{kk:'Саяхат пен жаңа иістерді жақсы көреді. Алдымен иелердің танысуы.',uz:'Sayohat va yangi hidlarni yaxshi ko‘radi. Avval egalar bilan tanishuv.'},
+  'demo-mila':{kk:'Сабырлы үй мысығы. Ата-анасы туралы мәліметті иесі берген.',uz:'Xotirjam uy mushugi. Ota-onasi haqidagi ma’lumotni egasi bergan.'},
+  'demo-amber':{kk:'Жас маис жыланы. Жынысы расталмаған, тек иелердің танысуы үшін.',uz:'Yosh makkajo‘xori iloni. Jinsi tasdiqlanmagan, faqat egalar bilan tanishuv uchun.'},
+};
