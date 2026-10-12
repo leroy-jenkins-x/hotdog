@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import { build } from 'esbuild';
+import { mkdir } from 'node:fs/promises';
+await mkdir('.sites-runtime/tests', {recursive:true});
+await build({entryPoints:['lib/cities.ts'],outfile:'.sites-runtime/tests/cities.mjs',bundle:true,format:'esm',platform:'node',logLevel:'error'});
+const {normalizeCity,readCityPreference,detectedCity}=await import('../.sites-runtime/tests/cities.mjs');
+assert.equal(normalizeCity(' Almaty '),'Алматы');assert.equal(normalizeCity('Toshkent'),'Ташкент');assert.equal(normalizeCity('Moscow'),'Москва');
+assert.equal(normalizeCity('  Мой  город  '),'Мой город');assert.equal(normalizeCity(undefined),'');
+const allCities={city:'',source:'manual'};assert.deepEqual(readCityPreference(encodeURIComponent(JSON.stringify(allCities))),allCities);
+assert.equal(readCityPreference('%broken'),null);assert.equal(readCityPreference(encodeURIComponent(JSON.stringify({city:'Москва',source:'untrusted'}))),null);
+assert.equal(detectedCity({cf:{city:'Almaty'}}),'Алматы');assert.equal(detectedCity({headers:new Headers({'cf-ipcity':'Moscow'})}),null);
+console.log('PASS: city aliases, malformed preferences, manual all-cities choice, edge-only geolocation.');

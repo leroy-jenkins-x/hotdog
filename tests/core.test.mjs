@@ -29,6 +29,12 @@ try{
   assert.equal((await call('/api/media/'+pedigreeId,{cookie:second})).status,403);
   assert.equal((await call('/api/media/'+pedigreeId,{cookie:first})).status,200);
   const publicResult=await (await call('/api/app/public/animals/'+petId)).json();assert.equal(publicResult.lineageStatus,'unknown');assert.equal('ownerId' in publicResult,false);assert.equal('pedigreeId' in publicResult,false);
+  const local=await (await call('/pair-results?city=Moscow&species=dog')).json();assert.equal(local.expanded,false);assert.deepEqual(local.pets.map(p=>p.id),['demo-mars']);
+  const expanded=await (await call('/pair-results?city=Алматы&species=dog&sex=male&q=корги&lineage=1')).json();assert.equal(expanded.expanded,true);assert.deepEqual(expanded.pets.map(p=>p.id),['demo-mars']);
+  const wrongSex=await (await call('/pair-results?city=Алматы&species=dog&sex=female')).json();assert.equal(wrongSex.pets.length,0);
+  const onlyIntroductions=await (await call('/pair-results?city=Казань&species=dog')).json();assert.equal(onlyIntroductions.expanded,true);assert.ok(!onlyIntroductions.pets.some(p=>p.id==='demo-finn'));
+  const missingBreed=await (await call('/pair-results?city=Алматы&species=dog&q=NoSuchBreed')).json();assert.equal(missingBreed.pets.length,0);
+  const location=await call('/api/app/location');assert.equal(location.status,200);assert.match(location.headers.get('cache-control'),/no-store/);
   const lineage=await (await call('/api/app/public/animals/demo-iris/lineage')).json();assert.equal(lineage.evidence,'unknown');assert.equal(lineage.unknownBranches,2);
   const start=new Date(Date.now()+86400000*2).toISOString();
   const proposal={animalId:'demo-mars',startsAt:start,timezone:'Europe/Moscow',purpose:'introduction',place:'A public meeting place',note:'Test proposal'};
@@ -39,6 +45,6 @@ try{
   assert.equal((await call('/api/app/meetings/'+winner,{method:'POST',body:{action:'cancel'},cookie:winningCookie})).status,200);
   assert.equal((await call('/api/app/meetings/'+loser,{method:'POST',body:{action:'demo-confirm'},cookie:losingCookie})).status,200);
   assert.equal((await call('/api/app/meetings/'+loser,{method:'POST',body:{action:'cancel'},cookie:winningCookie})).status,403);
-  for(const locale of ['ru','kk','uz']){const html=await (await call('/page/'+locale)).text();assert.match(html,/<h1/);assert.ok(html.includes('demo-mars'));assert.ok(html.includes('application/ld+json'));const meta=await (await call('/meta/'+locale)).json();assert.equal(meta.robots.index,false);assert.ok(meta.alternates.canonical.endsWith('/'+locale));assert.ok(meta.alternates.languages.kk.endsWith('/kk'));}
-  console.log('PASS: sessions, CSRF, file ownership/privacy, invalid birth date, public redaction, unknown lineage, concurrent reservation conflicts, cancellation authorization, and SSR/SEO in three locales.');
+  for(const locale of ['ru','kk','uz']){const html=await (await call('/page/'+locale)).text();assert.match(html,/<h1/);assert.ok(html.includes('demo-mars'));assert.ok(html.includes('application/ld+json'));assert.ok(html.includes('name="q"'));assert.ok(html.includes('name="purpose"'));assert.ok(!html.includes('search-intro'));const meta=await (await call('/meta/'+locale)).json();assert.equal(meta.robots.index,false);assert.ok(meta.alternates.canonical.endsWith('/'+locale));assert.ok(meta.alternates.languages.kk.endsWith('/kk'));}
+  console.log('PASS: sessions, CSRF, file ownership/privacy, invalid birth date, public redaction, unknown lineage, concurrent reservation conflicts, cancellation authorization, city aliases, breeding-only search, cross-city fallback preserving filters, and SSR/SEO in three locales.');
 }finally{await mf.dispose();}

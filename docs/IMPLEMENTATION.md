@@ -5,6 +5,8 @@
 - TypeScript UI and serverless Worker backend; one small D1 text database and R2 for photos/private pedigree files. No queues or permanent processes.
 - Russian, Kazakh and Uzbek routes, with language switches that preserve the page.
 - Friendly homepage, indexable species hubs, filtered catalog, pet profiles and server-rendered parentage text.
+- Header language dropdown and city selection with approximate Cloudflare edge geolocation. Manual overrides (including all cities) persist in a browser preference cookie and take precedence; no IP addresses or coordinates are stored.
+- Main search focuses on breeding partners: real breed/name input, species and partner-sex filters. Only known-sex profiles open to pair discussion appear by default. When no local match exists, the search expands to other cities while preserving all other filters and explains the expansion. An all-profiles filter remains available.
 - Three-step registration with a browser-local text/photo draft and a local IndexedDB document draft that survives OAuth redirects; optional parents and pedigree document.
 - Private dashboard, favorites, meeting proposals, recipient confirmation, cancellation and SQL-protected resource reservations.
 - Explicit demo accounts/fictional examples; simulated counterpart replies work only in demo mode.
@@ -27,10 +29,10 @@ VK ID requires app ID and registered `/api/auth/vk/callback`. Telegram requires 
 
 ## SEO and agents
 
-Core facts, parentage and links are server-rendered HTML. Each locale has a self-canonical and reciprocal hreflang. Arbitrary filtered pages and private onboarding/account pages are noindex. Species hubs are available for indexed discovery. Demo deployments are deliberately noindex/robots-disallowed, and dummy animals are omitted from sitemaps.
+Core facts, parentage and links are server-rendered HTML. Each locale has a self-canonical and reciprocal hreflang. Arbitrary filtered pages and private onboarding/account pages are noindex. Species hubs are available for indexed discovery. Demo deployments are deliberately noindex/robots-disallowed, and dummy animals are omitted from sitemaps. City-personalized and filtered catalog pages remain noindex; location never changes a visitor’s language automatically.
 
 ```
-GET /api/v1/public/animals?q=&species=&city=&locale=
+GET /api/v1/public/animals?q=&species=&city=&locale=&purpose=breeding&sex=
 GET /api/v1/public/animals/{id}
 GET /api/v1/public/animals/{id}/lineage
 GET /api/v1/public/species
@@ -67,4 +69,4 @@ Record editing and moderation, ownership transfer, registry/issuer confirmation,
 
 `pnpm typecheck`, `pnpm test`, `pnpm build`. Tests cover signed-session tampering, CSRF, uploads/private files, ownership/redaction, date validation, real D1 transactional conflict behavior in Miniflare, cancellation authorization, timezone conversion and server-rendered home facts/metadata in three languages.
 
-Tests do not cover actual OAuth-provider flows or interactive browser/visual QA. The Sites browser-control skill was unavailable in this environment, so no browser preview server was used. Review the private demo on desktop/mobile before public launch.
+Tests do not cover actual OAuth-provider flows or interactive browser/visual QA. City tests cover alias normalization, malformed preferences, manual all-city overrides and untrusted header rejection. Search tests cover local matches, breeding-only results and cross-city expansion without losing species/sex/name/pedigree filters. The Sites browser-control skill was unavailable in this environment, so no browser preview server was used. Review the private demo on desktop/mobile before public launch.

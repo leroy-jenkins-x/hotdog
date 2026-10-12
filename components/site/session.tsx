@@ -4,6 +4,7 @@ import { X,UserRound,ArrowRight,Phone,Send,Mail,PawPrint,Menu } from 'lucide-rea
 import type { Locale,User,AccountData } from '@/lib/types';
 import { t } from '@/lib/i18n';
 import { usePathname } from 'next/navigation';
+import { searchCopy } from '@/lib/search-i18n';
 type SessionData={user:User|null;demo:boolean;providers:{vk:boolean;telegram:boolean;phone:boolean}};
 type Context=SessionData&{ready:boolean;refresh:()=>Promise<void>;login:()=>void;favoriteIds:string[];refreshFavorites:()=>Promise<void>};
 const Auth=createContext<Context>({user:null,demo:false,providers:{vk:false,telegram:false,phone:false},ready:false,refresh:async()=>{},login:()=>{},favoriteIds:[],refreshFavorites:async()=>{}});
@@ -22,4 +23,7 @@ export function SessionProvider({locale,children}:{locale:Locale;children:React.
 }
 export function AccountButton({locale}:{locale:Locale}){const a=useAuth(),d=t(locale);return a.user?<a className="button button-dark small" href={`/${locale}/dashboard`}><UserRound size={17}/>{d.myPets}</a>:<button className="button button-outline small" onClick={a.login}><UserRound size={17}/>{d.signIn}</button>;}
 export function MobileMenu({locale}:{locale:Locale}){const [open,setOpen]=useState(false),d=t(locale);return <div className="mobile-menu"><button className="icon-button" aria-expanded={open} aria-label={d.explore} onClick={()=>setOpen(!open)}><Menu/></button>{open&&<nav><a href={`/${locale}/pets`}>{d.explore}</a><a href={`/${locale}/guides`}>{d.guides}</a><a href={`/${locale}/dashboard`}>{d.myPets}</a><a href={`/${locale}/register`}>{d.addPet}</a></nav>}</div>;}
-export function LanguageSwitch({locale}:{locale:Locale}){const path=usePathname()||'/'+locale;return <nav className="language-switch" aria-label="Language">{[['ru','РУ'],['kk','ҚАЗ'],['uz','UZ']].map(([l,label])=><a key={l} href={path.replace(/^\/(ru|kk|uz)(?=\/|$)/,'/'+l)} lang={l} className={locale===l?'selected':''}>{label}</a>)}</nav>;}
+export function LanguageSwitch({locale}:{locale:Locale}) {
+  const path=usePathname()||'/'+locale,copy=searchCopy(locale);
+  return <label className="language-dropdown"><span className="sr-only">{copy.language}</span><select aria-label={copy.language} value={locale} onChange={e=>{const url=new URL(window.location.href);window.location.assign(path.replace(/^\/(ru|kk|uz)(?=\/|$)/,'/'+e.target.value)+url.search+url.hash);}}><option value="ru" lang="ru">Русский</option><option value="kk" lang="kk">Қазақша</option><option value="uz" lang="uz">O‘zbekcha</option></select></label>;
+}

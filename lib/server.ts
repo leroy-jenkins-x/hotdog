@@ -2,6 +2,7 @@ import { env } from 'cloudflare:workers';
 import { demoPets } from './demo';
 import type { Pet, User, Meeting } from './types';
 import { cookieValue, unseal, HttpError } from './security';
+import { normalizeCity } from './cities';
 export const runtime = () => env as Cloudflare.Env;
 export const demoEnabled = () => runtime().DEMO_MODE === 'true';
 export const origin = () => (runtime().SITE_ORIGIN || 'https://example.ru').replace(/\/$/,'');
@@ -22,13 +23,20 @@ export async function petById(id:string):Promise<Pet|null> {
   const seed=demoEnabled()?demoPets.find(p=>p.id===id):null;if(seed)return seed;
   const row=await database().prepare('SELECT * FROM pets WHERE id=?').bind(id).first<Record<string,unknown>>();return row?decodePet(row):null;
 }
-export async function publicPets(options:{q?:string;species?:string;city?:string;lineage?:boolean;limit?:number}={}) {
+export type PetSearchOptions = {q?:string;species?:string;city?:string;lineage?:boolean;limit?:number;breeding?:boolean;sex?:string};
+export async function publicPets(options:PetSearchOptions={}) {
   const db=database();const limit=Math.min(60,Math.max(1,options.limit||30));
   // This small deployment deliberately uses indexed filters and bounded scans rather than a search service.
   const result=await db.prepare('SELECT * FROM pets ORDER BY created_at DESC LIMIT 200').all<Record<string,unknown>>();
   const all=[...(demoEnabled()?demoPets:[]),...result.results.map(decodePet)];
   const normalize=(s:string)=>s.normalize('NFKC').toLocaleLowerCase().replace(/ё/g,'е');
-  return all.filter(p=>(!options.species||p.species===options.species)&&(!options.city||normalize(p.city).includes(normalize(options.city)))&&(!options.q||normalize(p.name+' '+p.breed+' '+p.description).includes(normalize(options.q)))&&(!options.lineage||p.parents.some(x=>x.name))).slice(0,limit);
+  return all.filter(p=>(!options.species||p.species===options.species)&&(!options.city||normalize(normalizeCity(p.city)).includes(normalize(normalizeCity(options.city))))&&(!options.q||normalize(p.name+' '+p.breed+' '+p.description).includes(normalize(options.q)))&&(!options.lineage||p.parents.some(x=>x.name))&&(!options.breeding||(p.status==='available'&&p.sex!=='unknown'))&&(!options.sex||p.sex===options.sex)).slice(0,limit);
+}
+export async function searchPets(options:PetSearchOptions={}) {
+  const city=normalizeCity(options.city),local=await publicPets({...options,city});
+  if(local.length||!city)return {pets:local,expanded:false,city};
+  const others=await publicPets({...options,city:undefined});
+  return {pets:others,expanded:others.length>0,city};
 }
 export function publicRecord(p:Pet,locale='ru') {
   return {id:p.id,name:p.name,species:p.species,breed:p.breed,sex:p.sex,birthDate:p.born||null,city:p.city,description:p.description,parents:p.parents,status:p.status,photoUrl:p.photoId?`${origin()}/api/media/${p.photoId}`:null,hasPedigreeDocument:Boolean(p.pedigreeId),lineageStatus:p.parents.some(x=>x.name)?'owner-reported':'unknown',isDemo:p.isDemo,updatedAt:p.updatedAt,sourceUrl:`${origin()}/${locale}/pets/${p.id}`,availableLocales:['ru','kk','uz'],schemaVersion:'1.0'};

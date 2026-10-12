@@ -1,7 +1,8 @@
 import { z } from 'zod';
-import { database,demoEnabled,petById,publicPets,publicRecord,decodePet,decodeMeeting,requireUser,runtime,userFor,secret,origin } from './server';
+import { database,demoEnabled,petById,publicPets,searchPets,publicRecord,decodePet,decodeMeeting,requireUser,runtime,userFor,secret,origin } from './server';
 import { HttpError,sameOrigin,seal,cookie,validateFile } from './security';
 import type { Parent } from './types';
+import { detectedCity } from './cities';
 const clean=z.string().trim();
 export const petInput=z.object({name:clean.min(1).max(80),species:z.enum(['dog','cat','snake']),breed:clean.max(120).default(''),sex:z.enum(['male','female','unknown']),born:z.string().regex(/^\d{4}-\d{2}-\d{2}$/).or(z.literal('')),city:clean.min(1).max(80),description:clean.max(1800),father:clean.max(120).default(''),mother:clean.max(120).default(''),fatherId:z.string().max(100).optional(),motherId:z.string().max(100).optional(),photoId:z.string().optional(),pedigreeId:z.string().optional(),status:z.enum(['available','introduction','unavailable']),consent:z.literal(true)});
 const meetingInput=z.object({animalId:clean.min(1).max(100),ownAnimalId:z.string().max(100).optional(),startsAt:z.string().datetime(),timezone:clean.min(1).max(60),purpose:z.enum(['introduction','breeding']),place:clean.min(1).max(160),note:clean.max(1000)});
@@ -10,7 +11,9 @@ async function parse(request:Request) {if(Number(request.headers.get('content-le
 export async function api(request:Request,path:string[]) {
   try {
     if(request.method!=='GET')sameOrigin(request);
-    const db=database();const key=path.join('/');const url=new URL(request.url);
+    const key=path.join('/');const url=new URL(request.url);
+    if(key==='location'&&request.method==='GET')return json({city:detectedCity(request),accuracy:'approximate'});
+    const db=database();
     if(key==='session'&&request.method==='GET')return json({user:await userFor(request),demo:demoEnabled(),providers:{vk:Boolean(runtime().VK_CLIENT_ID),telegram:Boolean(runtime().TELEGRAM_CLIENT_ID&&runtime().TELEGRAM_CLIENT_SECRET),phone:false}});
     if(key==='demo'&&request.method==='POST') {
       if(!demoEnabled())throw new HttpError(403,'Demo login is disabled.');
@@ -23,7 +26,9 @@ export async function api(request:Request,path:string[]) {
     if(path[0]==='public'&&request.method==='GET') {
       if(path[1]==='animals'&&path[2]) {const p=await petById(path[2]);if(!p)throw new HttpError(404,'Animal not found.');return json(path[3]==='lineage'?{animalId:p.id,parents:p.parents,evidence:p.parents.some(x=>x.name)?'owner-reported':'unknown',unknownBranches:2-p.parents.filter(x=>x.name).length,sourceUrl:`${origin()}/ru/pets/${p.id}`} :publicRecord(p,url.searchParams.get('locale')||'ru'),200,{'Cache-Control':'public, max-age=60'});}
       if(path[1]==='species')return json({data:[{id:'dog',names:{ru:'Собаки',kk:'Иттер',uz:'Itlar'}},{id:'cat',names:{ru:'Кошки',kk:'Мысықтар',uz:'Mushuklar'}},{id:'snake',names:{ru:'Змеи',kk:'Жыландар',uz:'Ilonlar'}}]});
-      const data=await publicPets({q:url.searchParams.get('q')||undefined,species:url.searchParams.get('species')||undefined,city:url.searchParams.get('city')||undefined,limit:30});return json({data:data.map(p=>publicRecord(p,url.searchParams.get('locale')||'ru')),limit:30,nextCursor:null,schemaVersion:'1.0'},200,{'Cache-Control':'public, max-age=60'});
+      const breeding=url.searchParams.get('purpose')==='breeding';
+      const options={q:url.searchParams.get('q')||undefined,species:url.searchParams.get('species')||undefined,city:url.searchParams.get('city')||undefined,breeding,sex:['male','female'].includes(url.searchParams.get('sex')||'')?url.searchParams.get('sex')!:undefined,limit:30};
+      const result=breeding?await searchPets(options):{pets:await publicPets(options),expanded:false,city:options.city||''};return json({data:result.pets.map(p=>publicRecord(p,url.searchParams.get('locale')||'ru')),expandedToOtherCities:result.expanded,searchedCity:result.city||null,limit:30,nextCursor:null,schemaVersion:'1.0'},200,{'Cache-Control':'public, max-age=60'});
     }
     const user=await requireUser(request);
     if(key==='account'&&request.method==='GET') {
